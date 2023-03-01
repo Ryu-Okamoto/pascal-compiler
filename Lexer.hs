@@ -17,10 +17,7 @@ lex :: InputFilePath -> OutputFilePath -> IO ()
 lex inputFilePath outputFilePath = do
     sourceCodeLines <- lines <$> readFile inputFilePath
     let tokenInfos = processLine 1 sourceCodeLines
-    let output = map (\tokenInfo -> getToken tokenInfo ++ "\t" 
-                                    ++ getTokenType tokenInfo ++ "\t"
-                                    ++ getTokenID tokenInfo ++ "\t" 
-                                    ++ show (getLineNumber tokenInfo)) tokenInfos
+    let output = map (\tokenInfo -> getToken tokenInfo ++ "\t" ++ getTokenType tokenInfo ++ "\t" ++ getTokenID tokenInfo ++ "\t" ++ show (getLineNumber tokenInfo)) tokenInfos
     writeFile outputFilePath $ unlines output
 
 processLine :: LineNumber -> [SourceCode] -> [TokenInfo]
