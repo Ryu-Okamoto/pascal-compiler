@@ -1,6 +1,6 @@
 # HaskellでPascalコンパイラ
 
-プログラミング言語Pascalのサブセット言語のコンパイラをHaskellで実装します。
+Pascalのサブセット言語のコンパイラをHaskellで実装します。
 
 アセンブリ言語はCASL IIです。
 
