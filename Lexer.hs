@@ -84,7 +84,7 @@ associateToken token
           isNumber (h:t) = h `elem` ['0' .. '9']
           isNumber [] = False
 
-splitToken ::SourceCode -> [Token]
+splitToken :: SourceCode -> [Token]
 splitToken sourceCode
     | null sourceCode = []
     | otherwise = firstToken : splitToken rest
