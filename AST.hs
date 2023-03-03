@@ -1,6 +1,7 @@
 module AST where
 
 import Lexer
+import Text.Read (Lexeme(String))
 
 type Optional = Maybe
 type AST = Program
@@ -92,10 +93,10 @@ showVariableNameSequence n (VariableNameSequence variableName variableNameList) 
 showVariableName :: Int -> VariableName -> String
 showVariableName n (VariableName identifier) = makeIndent n ++ "VariableName\n" ++ showIdentifier (n + 1) identifier 
 showType :: Int -> Type -> String
-showType n (Standard standardType) = makeIndent n ++ "Type\n" ++ showStandardType (n + 1) standardType
-showType n (Array arrayType) = makeIndent n ++ "Type\n" ++ showArrayType (n + 1) arrayType
+showType n (Standard standardType) = makeIndent n ++ "Type (Standard)\n" ++ showStandardType (n + 1) standardType
+showType n (Array arrayType) = makeIndent n ++ "Type (Array)\n" ++ showArrayType (n + 1) arrayType
 showStandardType :: Int -> StandardType -> String
-showStandardType n (StandardType tokenInfo) = makeIndent n ++ "StandardType -> \"" ++ getToken tokenInfo ++ "\"\n"
+showStandardType n (StandardType tokenInfo) = makeIndent n ++ "StandardType => \"" ++ getToken tokenInfo ++ "\"\n"
 showArrayType :: Int -> ArrayType -> String
 showArrayType n (ArrayType minimumIndex maximumIndex standardType) = makeIndent n ++ "ArrayType\n" ++ showMinimumIndex (n + 1) minimumIndex ++ showMaximumIndex (n + 1) maximumIndex ++ showStandardType (n + 1) standardType 
 showMinimumIndex :: Int -> MinimumIndex -> String
@@ -106,7 +107,7 @@ showInteger_ :: Int -> Integer_ -> String
 showInteger_ n (Integer_ (Just sign) unsignedInteger) = makeIndent n ++ "Integer_\n" ++ showSign (n + 1) sign ++ showUnsignedInteger (n + 1) unsignedInteger 
 showInteger_ n (Integer_ Nothing unsignedInteger) = makeIndent n ++ "Integer_\n" ++ showUnsignedInteger (n + 1) unsignedInteger 
 showSign :: Int -> Sign -> String
-showSign n (Sign tokenInfo) = makeIndent n ++ "Sign -> \"" ++ getToken tokenInfo ++ "\"\n"
+showSign n (Sign tokenInfo) = makeIndent n ++ "Sign => \"" ++ getToken tokenInfo ++ "\"\n"
 showSubprogramDeclarations :: Int -> SubprogramDeclarations -> String
 showSubprogramDeclarations n (SubprogramDeclarations subprogramDeclarationList) = makeIndent n ++ "SubprogramDeclaration\n" ++ concatMap (showSubprogramDeclaration (n + 1)) subprogramDeclarationList 
 showSubprogramDeclaration :: Int -> SubprogramDeclaration -> String
@@ -130,9 +131,9 @@ showCompoundStatement n (CompoundStatement statementSequence) = makeIndent n ++ 
 showStatementSequence :: Int -> StatementSequence -> String
 showStatementSequence n (StatementSequence statement statementList) = makeIndent n ++ showStatement (n + 1) statement ++ concatMap (showStatement (n + 1)) statementList 
 showStatement :: Int -> Statement -> String
-showStatement n (Basic basicStatement) = makeIndent n ++ "Statement\n" ++ showBasicStatement (n + 1) basicStatement 
-showStatement n (Branch ifStatement) = makeIndent n ++ "Statement\n" ++ showIfStatement (n + 1) ifStatement 
-showStatement n (Repeat whileStatement) = makeIndent n ++ "Statement\n" ++ showWhileStatement (n + 1) whileStatement 
+showStatement n (Basic basicStatement) = makeIndent n ++ "Statement (Basic)\n" ++ showBasicStatement (n + 1) basicStatement 
+showStatement n (Branch ifStatement) = makeIndent n ++ "Statement (Branch)\n" ++ showIfStatement (n + 1) ifStatement 
+showStatement n (Repeat whileStatement) = makeIndent n ++ "Statement (Repeat)\n" ++ showWhileStatement (n + 1) whileStatement 
 showIfStatement :: Int -> IfStatement -> String
 showIfStatement n (IfStatement expression compoundStatement elseStatement) = makeIndent n ++ "showIfStatement\n" ++ showExpression (n + 1) expression ++ showCompoundStatement (n + 1) compoundStatement ++ showElseStatement (n + 1) elseStatement 
 showElseStatement :: Int -> ElseStatement -> String
@@ -141,17 +142,17 @@ showElseStatement n (ElseStatement Nothing) = makeIndent n ++ "ElseStatement\n"
 showWhileStatement :: Int -> WhileStatement -> String
 showWhileStatement n (WhileStatement expression compoundStatement) = makeIndent n ++ "WhileStatement\n" ++ showExpression (n + 1) expression ++ showCompoundStatement (n + 1) compoundStatement 
 showBasicStatement :: Int -> BasicStatemet -> String
-showBasicStatement n (Assign assignStatement) = makeIndent n ++ "BasicStatement\n" ++ showAssignStatement (n + 1) assignStatement 
-showBasicStatement n (ProcedureCall procedureCallStatement) = makeIndent n ++ "BasicStatement\n" ++ showProcedureCallStatement (n + 1) procedureCallStatement 
-showBasicStatement n (IO ioStatement) = makeIndent n ++ "BasicStatement\n" ++ showIOStatement (n + 1) ioStatement 
-showBasicStatement n (Compound compoundStatement) = makeIndent n ++ "BasicStatement\n" ++ showCompoundStatement (n + 1) compoundStatement 
+showBasicStatement n (Assign assignStatement) = makeIndent n ++ "BasicStatement (Assign)\n" ++ showAssignStatement (n + 1) assignStatement 
+showBasicStatement n (ProcedureCall procedureCallStatement) = makeIndent n ++ "BasicStatement (ProcedureCall)\n" ++ showProcedureCallStatement (n + 1) procedureCallStatement 
+showBasicStatement n (IO ioStatement) = makeIndent n ++ "BasicStatement (IO)\n" ++ showIOStatement (n + 1) ioStatement 
+showBasicStatement n (Compound compoundStatement) = makeIndent n ++ "BasicStatement (Compound)\n" ++ showCompoundStatement (n + 1) compoundStatement 
 showAssignStatement :: Int -> AssignStatement -> String
 showAssignStatement n (AssignStatement leftSide expression) = makeIndent n ++ "AssignStatement\n" ++ showLeftSide (n + 1) leftSide ++ showExpression (n + 1) expression 
 showLeftSide :: Int -> LeftSide -> String
 showLeftSide n (LeftSide variable) = makeIndent n ++ "LeftSide\n" ++ showVariable (n + 1) variable 
 showVariable :: Int -> Variable -> String
-showVariable n (Pure purevariable) = makeIndent n ++ "Variable\n" ++ showPureVariable (n + 1) purevariable 
-showVariable n (Indexed indexdVarible) = makeIndent n ++ "Variable\n" ++ showIndexedVariable (n + 1) indexdVarible 
+showVariable n (Pure purevariable) = makeIndent n ++ "Variable (Pure)\n" ++ showPureVariable (n + 1) purevariable 
+showVariable n (Indexed indexdVarible) = makeIndent n ++ "Variable (Indexed)\n" ++ showIndexedVariable (n + 1) indexdVarible 
 showPureVariable :: Int -> PureVariable -> String
 showPureVariable n (PureVariable variableName) = makeIndent n ++ "PureVariable\n" ++ showVariableName (n + 1) variableName 
 showIndexedVariable :: Int -> IndexedVariable -> String
@@ -178,32 +179,32 @@ showTerm n (Term factor multiplicativeOperationList) = makeIndent n ++ "Term\n" 
 showMultiplicativeOperation :: Int -> MultiplicativeOperation -> String
 showMultiplicativeOperation n (MultiplicativeOperation multiplicativeOperator factor) = makeIndent n ++ "MultiplicativeOperation\n" ++ showMultiplicativeOperator (n + 1) multiplicativeOperator ++ showFactor (n + 1) factor 
 showFactor :: Int -> Factor -> String
-showFactor n (VariableReference variable) = makeIndent n ++ "Factor\n" ++ showVariable (n + 1) variable 
-showFactor n (ConstantReference constant) = makeIndent n ++ "Factor\n" ++ showConstant (n + 1) constant 
-showFactor n (Recursion expression) = makeIndent n ++ "Factor\n" ++ showExpression (n + 1) expression 
-showFactor n (Negation factor) = makeIndent n ++ "Factor\n" ++ showFactor (n + 1) factor
+showFactor n (VariableReference variable) = makeIndent n ++ "Factor (VariableReference)\n" ++ showVariable (n + 1) variable 
+showFactor n (ConstantReference constant) = makeIndent n ++ "Factor (ConstantReference)\n" ++ showConstant (n + 1) constant 
+showFactor n (Recursion expression) = makeIndent n ++ "Factor (Recursion)\n" ++ showExpression (n + 1) expression 
+showFactor n (Negation factor) = makeIndent n ++ "Factor (Negation)\n" ++ showFactor (n + 1) factor
 showRelationalOperator :: Int -> RelationalOperator -> String
-showRelationalOperator n (RelationalOperator tokenInfo) = makeIndent n ++ "RelationalOperator -> \"" ++ getToken tokenInfo ++ "\"\n"
+showRelationalOperator n (RelationalOperator tokenInfo) = makeIndent n ++ "RelationalOperator => \"" ++ getToken tokenInfo ++ "\"\n"
 showAdditionalOperator :: Int -> AdditionalOperator -> String
-showAdditionalOperator n (AdditionalOperator tokenInfo) = makeIndent n ++ "AdditionalOperator -> \"" ++ getToken tokenInfo ++ "\"\n"
+showAdditionalOperator n (AdditionalOperator tokenInfo) = makeIndent n ++ "AdditionalOperator => \"" ++ getToken tokenInfo ++ "\"\n"
 showMultiplicativeOperator :: Int -> MultiplicativeOperator -> String
-showMultiplicativeOperator n (MultiplicativeOperator tokenInfo) = makeIndent n ++ "Multiplicative -> \"" ++ getToken tokenInfo ++ "\"\n"
+showMultiplicativeOperator n (MultiplicativeOperator tokenInfo) = makeIndent n ++ "Multiplicative => \"" ++ getToken tokenInfo ++ "\"\n"
 showIOStatement :: Int -> IOStatement -> String
-showIOStatement n (InputStatement (Just variableSequence)) = makeIndent n ++ "IOStatement\n" ++ showVariableSequence (n + 1) variableSequence 
-showIOStatement n (InputStatement Nothing) = makeIndent n ++ "IOStatement\n"
-showIOStatement n (OutputStatement (Just expressionSequence)) = makeIndent n ++ "IOStatement\n" ++ showExpressionSequence (n + 1) expressionSequence 
-showIOStatement n (OutputStatement Nothing) = makeIndent n ++ "IOStatement\n"
+showIOStatement n (InputStatement (Just variableSequence)) = makeIndent n ++ "IOStatement (InputStatement)\n" ++ showVariableSequence (n + 1) variableSequence 
+showIOStatement n (InputStatement Nothing) = makeIndent n ++ "IOStatement (InputStatement)\n"
+showIOStatement n (OutputStatement (Just expressionSequence)) = makeIndent n ++ "IOStatement (OutputStatement)\n" ++ showExpressionSequence (n + 1) expressionSequence 
+showIOStatement n (OutputStatement Nothing) = makeIndent n ++ "IOStatement (OutputStatement)\n"
 showVariableSequence :: Int -> VariableSequence -> String
 showVariableSequence n (VariableSequence variable variableList) = makeIndent n ++ "VariableSequence\n" ++ showVariable (n + 1) variable ++ concatMap (showVariable (n + 1)) variableList 
 showConstant :: Int -> Constant -> String
-showConstant n (IntegerLiteral unsignedInteger) = makeIndent n ++ "Constant\n" ++ showUnsignedInteger (n + 1) unsignedInteger 
-showConstant n (StringLiteral string) = makeIndent n ++ "Constant\n" ++ showString_ (n + 1) string 
-showConstant n (BooleanLiteral boolean) = makeIndent n ++ "Constant\n" ++ showBoolean (n + 1) boolean 
+showConstant n (IntegerLiteral unsignedInteger) = makeIndent n ++ "Constant (IntegerLiteral)\n" ++ showUnsignedInteger (n + 1) unsignedInteger 
+showConstant n (StringLiteral string) = makeIndent n ++ "Constant (StringLiteral)\n" ++ showString_ (n + 1) string 
+showConstant n (BooleanLiteral boolean) = makeIndent n ++ "Constant (BooleanLiteral)\n" ++ showBoolean (n + 1) boolean 
 showUnsignedInteger :: Int -> UnsignedInteger -> String
-showUnsignedInteger n (UnsignedInteger tokenInfo) = makeIndent n ++ "UnsignedInteger -> \"" ++ getToken tokenInfo ++ "\"\n"
+showUnsignedInteger n (UnsignedInteger tokenInfo) = makeIndent n ++ "UnsignedInteger => \"" ++ getToken tokenInfo ++ "\"\n"
 showString_ :: Int -> String_ -> String
-showString_ n (String_ tokenInfo) = makeIndent n ++ "String -> \"" ++ getToken tokenInfo ++ "\"\n"
+showString_ n (String_ tokenInfo) = makeIndent n ++ "String_ => \"" ++ getToken tokenInfo ++ "\"\n"
 showBoolean :: Int -> Boolean -> String
-showBoolean n (Boolean tokenInfo) = makeIndent n ++ "Boolean -> \"" ++ getToken tokenInfo ++ "\"\n"
+showBoolean n (Boolean tokenInfo) = makeIndent n ++ "Boolean => \"" ++ getToken tokenInfo ++ "\"\n"
 showIdentifier :: Int -> Identifier -> String
-showIdentifier n (Identifier tokenInfo) = makeIndent n ++ "Identifier -> \"" ++ getToken tokenInfo ++ "\"\n"
+showIdentifier n (Identifier tokenInfo) = makeIndent n ++ "Identifier => \"" ++ getToken tokenInfo ++ "\"\n"
