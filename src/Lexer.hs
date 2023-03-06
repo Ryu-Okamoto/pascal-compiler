@@ -1,31 +1,24 @@
 module Lexer where
 
-type InputFilePath = FilePath
-type OutputFilePath = FilePath
-
-type SourceCode = String
-
-type Token = String
-type TokenType = String
-type TokenID = String
-type LineNumber = Int
-data TokenInfo = TokenInfo { getToken :: Token, getTokenType :: TokenType, getTokenID :: TokenID, getLineNumber :: LineNumber } deriving (Show)
+import Token
+import Utils
 
 data State = Q0 | Q1 | Q2 | Q3 | Q4 | Q5 | Q6 | Q7 | Q8 | Q9 | Q10 | Q11 | Q12 | Q13 | Q14 | QF deriving (Eq)
 
 lex :: InputFilePath -> OutputFilePath -> IO ()
 lex inputFilePath outputFilePath = do
     sourceCodeLines <- lines <$> readFile inputFilePath
-    let tokenInfos = processLine 1 sourceCodeLines
-    let output = map (\tokenInfo -> getToken tokenInfo ++ "\t" ++ getTokenType tokenInfo ++ "\t" ++ getTokenID tokenInfo ++ "\t" ++ show (getLineNumber tokenInfo)) tokenInfos
-    writeFile outputFilePath $ unlines output
+    let tokens = processLine 1 sourceCodeLines
+    writeFile outputFilePath $ unlines $ map tokenToLine tokens
 
 processLine :: LineNumber -> [SourceCode] -> [TokenInfo]
 processLine lineNumber (h:t) = tokenInfos ++ processLine (lineNumber + 1) t
-    where tokenInfos = map (toInfo lineNumber) (splitToken h)
-          toInfo :: LineNumber -> Token -> TokenInfo
-          toInfo lineNumber token = uncurry (TokenInfo token) tokenTupple lineNumber
-              where tokenTupple = associateToken token
+    where 
+        tokenInfos = map (toInfo lineNumber) (splitToken h)
+        toInfo :: LineNumber -> Token -> TokenInfo
+        toInfo lineNumber token = uncurry (TokenInfo token) tokenTupple lineNumber
+            where 
+                tokenTupple = associateToken token
 processLine _ [] = []
 
 associateToken :: Token -> (TokenType, TokenID)
@@ -77,27 +70,28 @@ associateToken token
     | isString token = ("SSTRING", "45")
     | isNumber token = ("SCONSTANT", "44")
     | otherwise = ("SIDENTIFIER", "43")
-    where isString :: String -> Bool
-          isString (h:t) = h == '\''
-          isString [] = False
-          isNumber :: String -> Bool
-          isNumber (h:t) = h `elem` ['0' .. '9']
-          isNumber [] = False
+    where 
+        isString :: String -> Bool
+        isString (h:t) = h == '\''
+        isString [] = False
+        isNumber :: String -> Bool
+        isNumber (h:t) = h `elem` ['0' .. '9']
+        isNumber [] = False
 
 splitToken :: SourceCode -> [Token]
 splitToken sourceCode
     | null sourceCode = []
-    | otherwise = firstToken : splitToken rest
-    where (firstToken, rest) = clipFirstToken Q0 sourceCode
+    | otherwise = if null firstToken then splitToken rest else firstToken : splitToken rest
+    where 
+        (_, rest, firstToken) = clipFirstToken (Q0, sourceCode, [])
 
-clipFirstToken :: State -> SourceCode -> (Token, SourceCode)
-clipFirstToken state (h:t)
-    | (h `elem` [' ', '\t']) && (state == Q0) = clipFirstToken state t
-    | nextState == QF = ([], h:t)
-    | otherwise = (h:restToken, rest)
-    where nextState = transition (state, h)
-          (restToken, rest) = clipFirstToken nextState t
-clipFirstToken _ [] = ([], [])
+clipFirstToken :: (State, SourceCode, Token) -> (State, SourceCode, Token)
+clipFirstToken (QF, source, token) = (Q0, last token : source, init token)
+clipFirstToken (Q0, ' ':t, token) = clipFirstToken (Q0, t, token)
+clipFirstToken (Q0, '\t':t, token) = clipFirstToken (Q0, t, token)
+clipFirstToken (Q13, h:t, _) = clipFirstToken (transition (Q13, h), t, [])
+clipFirstToken (q, h:t, token) = clipFirstToken (transition (q, h), t, token ++ [h])
+clipFirstToken (q, [], token) = (Q0, [], token)
 
 transition :: (State, Char) -> State
 transition (Q0, a)

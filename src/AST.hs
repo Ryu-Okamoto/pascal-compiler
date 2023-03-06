@@ -1,0 +1,63 @@
+module AST where
+
+import Token
+
+data    Program                      = Program ProgramName Block CompoundStatement
+newtype ProgramName                  = ProgramName Identifier
+data    Block                        = Block VariableDeclaration SubprogramDeclarations
+newtype VariableDeclaration          = VariableDeclaration (Optional VariableDeclarationSequence)
+data    VariableDeclarationSequence  = VariableDeclarationSequence VariableDeclarationSequence' [VariableDeclarationSequence']
+data    VariableDeclarationSequence' = VariableDeclarationSequence' VariableNameSequence Type
+data    VariableNameSequence         = VariableNameSequence VariableName [VariableName]
+newtype VariableName                 = VariableName Identifier
+data    Type                         = Standard StandardType | Array ArrayType
+newtype StandardType                 = StandardType TokenInfo
+data    ArrayType                    = ArrayType MinimumIndex MaximumIndex StandardType
+newtype MinimumIndex                 = MinimumIndex Integer_
+newtype MaximumIndex                 = MaximumIndex Integer_
+data    Integer_                     = Integer_ (Optional Sign) UnsignedInteger
+newtype Sign                         = Sign TokenInfo
+newtype SubprogramDeclarations       = SubprogramDeclarations [SubprogramDeclaration]
+data    SubprogramDeclaration        = SubprogramDeclaration SubprogramHead VariableDeclaration CompoundStatement
+data    SubprogramHead               = SubprogramHead ProcedureName Parameter
+newtype ProcedureName                = ProcedureName Identifier
+newtype Parameter                    = Parameter (Optional ParameterSequence)
+data    ParameterSequence            = ParameterSequence ParameterSequence' [ParameterSequence']
+data    ParameterSequence'           = ParameterSequence' ParameterNameSequence StandardType
+data    ParameterNameSequence        = ParameterNameSequence ParameterName [ParameterName]
+newtype ParameterName                = ParameterName Identifier
+newtype CompoundStatement            = CompoundStatement StatementSequence
+data    StatementSequence            = StatementSequence Statement [Statement]
+data    Statement                    = Basic BasicStatemet | Branch IfStatement | Repeat WhileStatement
+data    IfStatement                  = IfStatement Expression CompoundStatement ElseStatement
+newtype ElseStatement                = ElseStatement (Optional CompoundStatement)
+data    WhileStatement               = WhileStatement Expression CompoundStatement
+data    BasicStatemet                = Assignment AssignmentStatement | ProcedureCall ProcedureCallStatement | IO IOStatement | Compound CompoundStatement
+data    AssignmentStatement          = AssignmentStatement LeftSide Expression
+newtype LeftSide                     = LeftSide Variable
+data    Variable                     = Pure PureVariable | Indexed IndexedVariable
+newtype PureVariable                 = PureVariable VariableName
+data    IndexedVariable              = IndexedVariable VariableName Index
+newtype Index                        = Index Expression
+data    ProcedureCallStatement       = ProcedureCallStatement ProcedureName (Optional ExpressionSequence)
+data    ExpressionSequence           = ExpressionSequence Expression [Expression]
+data    Expression                   = Expression SimpleExpression (Optional RelationalOperation)
+data    RelationalOperation          = RelationalOperation RelationalOperator SimpleExpression
+data    SimpleExpression             = SimpleExpression (Optional Sign) Term [AdditionalOperation]
+data    AdditionalOperation          = AdditionalOperation AdditionalOperator Term
+data    Term                         = Term Factor [MultiplicativeOperation]
+data    MultiplicativeOperation      = MultiplicativeOperation MultiplicativeOperator Factor
+data    Factor                       = VariableReference Variable | ConstantReference Constant | Recursion Expression | Negation Factor
+newtype RelationalOperator           = RelationalOperator TokenInfo
+newtype AdditionalOperator           = AdditionalOperator TokenInfo
+newtype MultiplicativeOperator       = MultiplicativeOperator TokenInfo
+data    IOStatement                  = InputStatement (Optional VariableSequence) | OutputStatement (Optional ExpressionSequence)
+data    VariableSequence             = VariableSequence Variable [Variable]
+data    Constant                     = IntegerLiteral UnsignedInteger | StringLiteral String_ | BooleanLiteral Boolean
+newtype UnsignedInteger              = UnsignedInteger TokenInfo
+newtype String_                      = String_ TokenInfo
+newtype Boolean                      = Boolean TokenInfo
+newtype Identifier                   = Identifier TokenInfo
+
+type AST = Program
+type Optional = Maybe
