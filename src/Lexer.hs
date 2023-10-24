@@ -1,4 +1,4 @@
-module Src.Lexer ( Src.Lexer.run, a) where
+module Src.Lexer ( Src.Lexer.run ) where
 
 import Data.Char ( isNumber, isAlpha, isAlphaNum )
 
@@ -13,8 +13,6 @@ run source = loopForLines (lines source) "1"
         loopForLines (linesH:linesT) lineNumber = splitToTokens linesH lineNumber ++ loopForLines linesT incremented
             where
                 incremented = show ((read lineNumber :: Int) + 1)
-
-a = splitToTokens "1+3;" "1"
 
 splitToTokens :: SourceCode -> LineNumber -> [Token]
 splitToTokens [] _ = []

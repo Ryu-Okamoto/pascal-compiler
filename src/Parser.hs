@@ -16,3 +16,6 @@ instance Monad Parse where
     (>>=) :: Parse a -> (a -> Parse b) -> Parse b
     (>>=) (Parse x) f = f x
     (>>=) (SyntaxError lineNumber) _ = SyntaxError lineNumber
+
+run :: [Token] -> AST
+run tokens = undefined
