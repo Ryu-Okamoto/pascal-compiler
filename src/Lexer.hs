@@ -2,26 +2,26 @@ module Src.Lexer ( Src.Lexer.run ) where
 
 import Data.Char ( isNumber, isAlpha, isAlphaNum )
 
-import Src.Synonym ( SourceCode, LineNumber )
+import Src.Synonym ( SourceCode, SourceLine, LineNumber )
 import Src.Token ( Token, createToken )
 
 run :: SourceCode -> [Token]
 run source = loopForLines (lines source) "1"
     where
-        loopForLines :: [SourceCode] -> LineNumber -> [Token]
+        loopForLines :: [SourceLine] -> LineNumber -> [Token]
         loopForLines [] _ = []
         loopForLines (linesH:linesT) lineNumber = splitToTokens linesH lineNumber ++ loopForLines linesT incremented
             where
                 incremented = show ((read lineNumber :: Int) + 1)
 
-splitToTokens :: SourceCode -> LineNumber -> [Token]
+splitToTokens :: SourceLine -> LineNumber -> [Token]
 splitToTokens [] _ = []
 splitToTokens source lineNumber
     | firstToken == "" = splitToTokens rest lineNumber
     | otherwise = createToken firstToken lineNumber : splitToTokens rest lineNumber
     where
         (_, firstToken, rest) = extractFirstToken (State0, [], source)
-        extractFirstToken :: (DFAState, String, SourceCode) -> (DFAState, String, SourceCode)
+        extractFirstToken :: (DFAState, String, SourceLine) -> (DFAState, String, SourceLine)
         extractFirstToken (StateF, extracted, rest) = (State0, init extracted, last extracted : rest)
         extractFirstToken (State0, extracted, ' ':rest) = extractFirstToken (State0, extracted, rest)
         extractFirstToken (State0, extracted, '\n':rest) = extractFirstToken (State0, extracted, rest)
