@@ -4,8 +4,8 @@ import Test.Hspec ( Spec, describe, it, shouldBe, hspec )
 
 import Data.List.Split ( splitOn )
 
+import Src.Token ( Token (..) )
 import Src.Lexer ( run )
-import Src.Token ( Token (Token) )
 
 run :: IO ()
 run = do
@@ -53,6 +53,6 @@ run = do
     where
         test :: String -> String -> String -> Spec
         test description source ts = describe description $ it "standard" $ Src.Lexer.run source `shouldBe` tsToTokens ts
-            where
-                tsToTokens :: String -> [Token]
-                tsToTokens ts = map ((\(s:t:i:l:_) -> Token s t i l) . splitOn "\t") (lines ts)
+                
+tsToTokens :: String -> [Token]
+tsToTokens ts = map ((\(s:t:i:l:_) -> Token s t i l) . splitOn "\t") (lines ts)
