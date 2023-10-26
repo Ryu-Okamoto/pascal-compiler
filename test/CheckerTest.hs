@@ -1,9 +1,10 @@
-module Test.ParserTest where
+module Test.CheckerTest where
 
 import Test.Hspec ( Spec, describe, it, shouldBe, hspec )
 import Src.Token ( Token )
 import Src.AST ( AST )
 import Src.Parser.Parser ( run, Parse (..) )
+import Src.Checker.Checker ( run, Check (..) )
 
 import Test.LexerTest ( tsToTokens )
 
@@ -100,7 +101,10 @@ runSynerr = do
 test :: String -> [Token] -> String -> Spec
 test description tokens expected = describe description $ it "standard" $ result `shouldBe` expected
     where
-        result = let ast = Src.Parser.Parser.run tokens in
-                case ast of
-                    (SyntaxError lineNumber) -> lineNumber
-                    _ -> ""
+        result = let res1 = Src.Parser.Parser.run tokens in 
+                    case res1 of
+                        (SyntaxError lineNumber) -> lineNumber
+                        (Parse ast) -> let res2 = Src.Checker.Checker.run ast in
+                                            case res2 of
+                                            (SemanticError lineNumber) -> lineNumber
+                                            _ -> ""

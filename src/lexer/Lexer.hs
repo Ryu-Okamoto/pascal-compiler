@@ -1,4 +1,4 @@
-module Src.Lexer ( Src.Lexer.run ) where
+module Src.Lexer.Lexer ( run ) where
 
 import Data.Char ( isNumber, isAlpha, isAlphaNum )
 

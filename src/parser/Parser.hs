@@ -1,4 +1,4 @@
-module Src.Parser ( run, Parse (..) ) where
+module Src.Parser.Parser ( run, Parse (..) ) where
 
 import Src.Synonym ( LineNumber )
 import Src.Token ( Token (..) )
