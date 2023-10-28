@@ -20,7 +20,8 @@ type ProcedureTable = Map ProcedureName ProcedureInfo
     実装方針：
      - AST 要素のうち必要なとこだけを visit
        - 重複宣言がある場合はその行番号とともに SemanticError
-       - そうでない場合は (ProcedureName, ProcedureInfo) の Map を返す
+       - そうでない場合は ProcedureTable を返す
+        - ProcedureTable は (ProcedureName, ProcedureInfo) の Map
 -}
 
 constructProcedureTable :: AST -> Check ProcedureTable
