@@ -28,7 +28,9 @@ instance Monad Parse where
        - 文法と異なるとこがあればその行番号とともに SyntaxError
        - そうでない場合は (AST 部分木, 残りの Token リスト) を返す
     
-    例1）「A ::= "fuga1" B1 "fuga2" B2 "fuga3"」のとき
+    例）以下、EBNF の式に対する parse 関数
+
+    (1)「<A> ::= "fuga1" <B1> "fuga2" <B2> "fuga3"」のとき
     parseA tokens = 
         if (head tokens /= "fuga1") then SyntaxError ("fuga1" の行番号)
         else do
@@ -40,11 +42,13 @@ instance Monad Parse where
                 else
                     return (AConstructer B1 B2, rest3)
     
-    例2）「C ::= D | E」 のとき
+    (2)「<C> ::= <D> | <E>」 のとき
     parseC tokens
-        | head tokens `elem` First(D) = parseD tokens
-        | head tokens `elem` First(E) = parseE tokens
-        | otherwise = SyntaxEror (head Token の行番号)
+        | head tokens `elem` First(<D>) = parseD tokens
+        | head tokens `elem` First(<E>) = parseE tokens
+        | otherwise = SyntaxEror (head tokens の行番号)
+        where
+            First(<X>) は <X> の First 集合、すなわち、<X> の要素で初めに現れうる終端記号の集合を表す。
 -}
 
 run :: [Token] -> Parse AST
