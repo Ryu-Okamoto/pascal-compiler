@@ -5,6 +5,12 @@ import Data.Char ( isNumber, isAlpha, isAlphaNum )
 import Src.Synonym ( SourceCode, SourceLine, LineNumber )
 import Src.Token ( Token, createToken )
 
+{-
+    実装方針：
+     - 状態遷移機械（DFA）を模倣
+      - 形式定義をそのまま関数化し適用
+-}
+
 run :: SourceCode -> [Token]
 run source = loopForLines (lines source) "1"
     where

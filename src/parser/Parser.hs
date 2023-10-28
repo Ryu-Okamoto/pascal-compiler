@@ -21,6 +21,32 @@ instance Monad Parse where
     (>>=) (Parse x) f = f x
     (>>=) (SyntaxError lineNumber) _ = SyntaxError lineNumber
 
+{-
+    実装方針：
+     - Token を一つずつ読んでLL(1)解析
+      - 各 AST 要素に対し parse
+       - 文法と異なるとこがあればその行番号とともに SyntaxError
+       - そうでない場合は (AST 部分木, 残りの Token リスト) を返す
+    
+    例1）「A ::= "fuga1" B1 "fuga2" B2 "fuga3"」のとき
+    parseA tokens = 
+        if (head tokens /= "fuga1") then SyntaxError ("fuga1" の行番号)
+        else do
+            (b1, rest1) <- parseB1 (tail token)
+            if (head rest /= "fuga2") then SyntaxError ("fuga2" の行番号)
+            else do
+                (b2, rest2) <- parseB2 (tail rest1)
+                if (head rest2 /= "fuga3") then SyntaxError ("fuga3" の行番号)
+                else
+                    return (AConstructer B1 B2, rest3)
+    
+    例2）「C ::= D | E」 のとき
+    parseC tokens
+        | head tokens `elem` First(D) = parseD tokens
+        | head tokens `elem` First(E) = parseE tokens
+        | otherwise = SyntaxEror (head Token の行番号)
+-}
+
 run :: [Token] -> Parse AST
 run ts = do
     (program, _) <- parseProgram ts

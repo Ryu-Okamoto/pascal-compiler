@@ -23,6 +23,13 @@ instance Ord Variable where
 
 type VariableTable = Map Scope (Set Variable)
 
+{-
+    実装方針：
+     - AST 要素のうち必要なとこだけを visit
+       - 重複宣言がある場合はその行番号とともに SemanticError
+       - そうでない場合は (Scope, VariableTable) の Map を返す
+-}
+
 constructVariableTable :: AST -> Check VariableTable
 constructVariableTable = visitProgram
 
