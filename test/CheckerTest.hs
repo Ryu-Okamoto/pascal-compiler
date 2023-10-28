@@ -1,12 +1,11 @@
 module Test.CheckerTest where
 
 import Test.Hspec ( Spec, describe, it, shouldBe, hspec )
-import Src.Token ( Token )
+
+import Src.Token ( Token, tsToTokens )
 import Src.AST ( AST )
 import Src.Parser.Parser ( run, Parse (..) )
 import Src.Checker.Checker ( run, Check (..) )
-
-import Test.LexerTest ( tsToTokens )
 
 run :: IO()
 run = do
@@ -106,5 +105,5 @@ test description tokens expected = describe description $ it "standard" $ result
                         (SyntaxError lineNumber) -> lineNumber
                         (Parse ast) -> let res2 = Src.Checker.Checker.run ast in
                                             case res2 of
-                                            (SemanticError lineNumber) -> lineNumber
-                                            _ -> ""
+                                                (SemanticError lineNumber) -> lineNumber
+                                                _ -> ""

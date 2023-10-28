@@ -1,6 +1,7 @@
 module Src.Token where
 
 import Data.Char ( isNumber, isAlpha )
+import Data.List.Split ( splitOn )
 
 import Src.Synonym ( LineNumber )
 
@@ -61,3 +62,6 @@ createToken token lineNumber
     | token == ","         = Token ","         "SCOMMA"      "41" lineNumber
     | token == "."         = Token "."         "SDOT"        "42" lineNumber
     | otherwise            = Token token       "SIDENTIFIER" "43" lineNumber 
+
+tsToTokens :: String -> [Token]
+tsToTokens ts = map ((\(s:t:i:l:_) -> Token s t i l) . splitOn "\t") (lines ts)

@@ -1,11 +1,10 @@
 module Test.ParserTest where
 
 import Test.Hspec ( Spec, describe, it, shouldBe, hspec )
-import Src.Token ( Token )
+
+import Src.Token ( Token, tsToTokens )
 import Src.AST ( AST )
 import Src.Parser.Parser ( run, Parse (..) )
-
-import Test.LexerTest ( tsToTokens )
 
 run :: IO()
 run = do

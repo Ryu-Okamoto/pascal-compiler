@@ -5,4 +5,4 @@ type SourceLine = String
 type LineNumber = String
 
 type Scope = String
-globalScope = "" :: Scope
+cGLOBAL = "" :: Scope
