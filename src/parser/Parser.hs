@@ -46,7 +46,7 @@ instance Monad Parse where
     parseC tokens
         | head tokens `elem` First(<D>) = parseD tokens
         | head tokens `elem` First(<E>) = parseE tokens
-        | otherwise = SyntaxEror (head tokens の行番号)
+        | otherwise = SyntaxError (head tokens の行番号)
         where
             First(<X>) は <X> の First 集合、すなわち、<X> の要素で初めに現れうる終端記号の集合を表す。
 -}
