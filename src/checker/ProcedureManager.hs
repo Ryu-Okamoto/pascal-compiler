@@ -9,11 +9,11 @@ import Src.Checker.DType ( DType (..) )
 import Src.Checker.Checker ( Check (..) )
 
 data ProcedureInfo = ProcedureInfo {
-    getProcArgTypes :: [DType],
+    getProcArgTypes    :: [DType],
     getProcDefinedLine :: LineNumber
 } deriving ( Show )
 
-type ProcedureName = String
+type ProcedureName  = String
 type ProcedureTable = Map ProcedureName ProcedureInfo
 
 {-
@@ -45,7 +45,11 @@ visitSubprogramDeclarations :: ASubprogramDeclarations -> Check ProcedureTable
 visitSubprogramDeclarations (
         ASubprogramDeclarations
             subprogramDeclarationList
-    ) = createProcedureTable subprogramDeclarationList
+    ) = let
+            -- 前の方から順に検査するために。createProcedureTable の実装が末尾再帰だから。
+            reversed = reverse subprogramDeclarationList
+        in
+            createProcedureTable reversed
     where
         createProcedureTable :: [ASubprogramDeclaration] -> Check ProcedureTable
         createProcedureTable [] = return M.empty
