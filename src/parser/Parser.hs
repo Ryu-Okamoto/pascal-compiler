@@ -40,7 +40,7 @@ instance Monad Parse where
                 (b2, rest2) <- parseB2 (tail rest1)
                 if (head rest2 /= "fuga3") then SyntaxError ("fuga3" の行番号)
                 else
-                    return (AConstructer B1 B2, rest3)
+                    return (AConstructer B1 B2, rest2)
     
     (2)「<C> ::= <D> | <E>」 のとき
     parseC tokens
