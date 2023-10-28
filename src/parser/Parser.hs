@@ -34,8 +34,8 @@ instance Monad Parse where
     parseA tokens = 
         if (head tokens /= "fuga1") then SyntaxError ("fuga1" の行番号)
         else do
-            (b1, rest1) <- parseB1 (tail token)
-            if (head rest /= "fuga2") then SyntaxError ("fuga2" の行番号)
+            (b1, rest1) <- parseB1 (tail tokens)
+            if (head rest1 /= "fuga2") then SyntaxError ("fuga2" の行番号)
             else do
                 (b2, rest2) <- parseB2 (tail rest1)
                 if (head rest2 /= "fuga3") then SyntaxError ("fuga3" の行番号)
