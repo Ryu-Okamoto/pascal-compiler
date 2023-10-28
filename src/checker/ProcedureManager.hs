@@ -6,7 +6,7 @@ import Src.Synonym ( LineNumber )
 import Src.Token ( Token (..) )
 import Src.AST
 import Src.Checker.DType ( DType (..) )
-import Src.Checker.Checker ( Check (..) )
+import Src.Checker.CheckMonad ( Check (..) )
 
 data ProcedureInfo = ProcedureInfo {
     getProcArgTypes    :: [DType],
@@ -63,8 +63,7 @@ visitSubprogramDeclarations (
                 return $ newTable `M.union` createdTable
             else do
                 let duplicating = M.elemAt 0 duplicatingTable
-                SemanticError $ getProcDefinedLine $ snd duplicating
-            
+                SemanticError $ getProcDefinedLine $ snd duplicating   
 
 visitSubprogramDeclaration :: ASubprogramDeclaration -> ProcedureTable
 visitSubprogramDeclaration (
@@ -120,7 +119,6 @@ visitParameterSequence (
             where
                 (dtype, count) = visitParameterSequence' h
         
-
 visitParameterSequence' :: AParameterSequence' -> (DType, Int)
 visitParameterSequence' (
         AParameterSequence'

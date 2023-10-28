@@ -2,23 +2,20 @@ module Src.Checker.Checker ( run, Check (..) ) where
 
 import Src.Synonym ( LineNumber )
 import Src.AST
+import Src.Checker.CheckMonad ( Check (..) )
+import Src.Checker.VariableManager
+import Src.Checker.ProcedureManager
+import Src.Checker.TypeValidator
 
-data Check a = Check a | SemanticError LineNumber
-instance Functor Check where
-    fmap :: (a -> b) -> Check a -> Check b
-    fmap f (Check x) = Check (f x)
-    fmap _ (SemanticError lineNumber) = SemanticError lineNumber
-instance Applicative Check where
-    pure :: a -> Check a
-    pure = Check
-    (<*>) :: Check (a -> b) -> Check a -> Check b
-    (<*>) (Check f) (Check x) = Check (f x)
-    (<*>) _ (SemanticError lineNumber) = SemanticError lineNumber
-    (<*>) (SemanticError lineNumber) _ = SemanticError lineNumber
-instance Monad Check where
-    (>>=) :: Check a -> (a -> Check b) -> Check b
-    (>>=) (Check x) f = f x
-    (>>=) (SemanticError lineNumber) _ = SemanticError lineNumber
+{-
+    実装方針：
+     1. 変数表を作る。同スコープに重複宣言があれば SemanticError
+     2. 手続き表を作る。重複宣言があれば SemanticError
+     3. 型検査
+-}
 
 run :: AST -> Check ()
-run = undefined
+run ast = do
+    variableTableMap <- constructVariableTableMap ast
+    procedureTable <- constructProcedureTable ast
+    validateType (variableTableMap, procedureTable) ast

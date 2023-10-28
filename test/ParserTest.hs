@@ -4,7 +4,8 @@ import Test.Hspec ( Spec, describe, it, shouldBe, hspec )
 
 import Src.Token ( Token, tsToTokens )
 import Src.AST ( AST )
-import Src.Parser.Parser ( run, Parse (..) )
+import Src.Parser.ParseMonad ( Parse (..) )
+import Src.Parser.Parser ( run )
 
 run :: IO()
 run = do

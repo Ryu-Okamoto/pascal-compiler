@@ -3,23 +3,7 @@ module Src.Parser.Parser ( run, Parse (..) ) where
 import Src.Synonym ( LineNumber )
 import Src.Token ( Token (..) )
 import Src.AST
-
-data Parse a = Parse a | SyntaxError LineNumber
-instance Functor Parse where
-    fmap :: (a -> b) -> Parse a -> Parse b
-    fmap f (Parse x) = Parse (f x)
-    fmap _ (SyntaxError lineNumber) = SyntaxError lineNumber
-instance Applicative Parse where
-    pure :: a -> Parse a
-    pure = Parse
-    (<*>) :: Parse (a -> b) -> Parse a -> Parse b
-    (<*>) (Parse f) (Parse x) = Parse (f x)
-    (<*>) _ (SyntaxError lineNumber) = SyntaxError lineNumber
-    (<*>) (SyntaxError lineNumber) _ = SyntaxError lineNumber
-instance Monad Parse where
-    (>>=) :: Parse a -> (a -> Parse b) -> Parse b
-    (>>=) (Parse x) f = f x
-    (>>=) (SyntaxError lineNumber) _ = SyntaxError lineNumber
+import Src.Parser.ParseMonad ( Parse (..) )
 
 {-
     実装方針：

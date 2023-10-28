@@ -6,7 +6,7 @@ import Src.Synonym ( LineNumber, Scope, cGLOBAL )
 import Src.Token ( Token (..) )
 import Src.AST
 import Src.Checker.DType ( DType (..) )
-import Src.Checker.Checker ( Check (..) )
+import Src.Checker.CheckMonad ( Check (..) )
 
 data VariableInfo = VariableInfo {
     getVarType        :: DType,
@@ -174,7 +174,6 @@ visitSubprogramDeclarations (
             createdMap <- createVariableTableMap t
             return $ newMap `M.union` createdMap
 
-
 visitSubprogramDeclaration :: ASubprogramDeclaration -> Check VariableTableMap
 visitSubprogramDeclaration (
         ASubprogramDeclaration
@@ -253,7 +252,6 @@ visitParameterSequence' (
         return $ 
             M.fromList $
                 Prelude.map (\(name, line) -> (name, VariableInfo dtype line)) parameterNameList
-
 
 visitParameterNameSequence :: AParameterNameSequence -> Check [(VariableName, LineNumber)]
 visitParameterNameSequence (
