@@ -1,4 +1,4 @@
-module Src.Checker.ProcedureManager ( ProcedureName, ProcedureTable, ProcedureInfo (..), constructProcedureTable ) where
+module Src.Checker.ProcedureManager ( ProcedureName, ProcedureTable, ProcedureInfo (..), constructProcedureTable, lookupProcInfo ) where
 
 import Data.Map.Strict as M
 
@@ -15,6 +15,9 @@ data ProcedureInfo = ProcedureInfo {
 
 type ProcedureName  = String
 type ProcedureTable = Map ProcedureName ProcedureInfo
+
+lookupProcInfo :: ProcedureName -> ProcedureTable -> Maybe ProcedureInfo
+lookupProcInfo = M.lookup
 
 {-
     実装方針：

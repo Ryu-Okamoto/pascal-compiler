@@ -1,7 +1,7 @@
-module Src.Parser.Parser ( run, Parse (..) ) where
+module Src.Parser.Parser ( run ) where
 
 import Src.Synonym ( LineNumber )
-import Src.Token ( Token (..) )
+import Src.Token
 import Src.AST
 import Src.Parser.ParseMonad ( Parse (..) )
 
@@ -442,7 +442,7 @@ parseAssignmentStatement [] = SyntaxError ""
 parseAssignmentStatement (h:t) = do
     (leftSide, rest1) <- parseLeftSide (h:t)
     if null rest1 || getSType (head rest1) /= cSASSIGN
-    then
+    then 
         SyntaxError $ getSLineNumber h
     else do
         (expression, rest2) <- parseExpression (tail rest1)
@@ -603,8 +603,15 @@ parseFactor (h:t)
         then SyntaxError $ getSLineNumber h
         else return (ARecursion expression, tail rest)
     | getSType h == cSNOT = do
-        (factor, rest) <- parseFactor t
-        return (ANegation factor, rest)
+        (negation, rest1) <- parseNegationOperator (h:t)
+        (factor, rest2) <- parseFactor rest1
+        return (ANegation negation factor, rest2)
+    | otherwise = SyntaxError $ getSLineNumber h
+
+parseNegationOperator :: [Token] -> Parse (ANegationOperator, [Token])
+parseNegationOperator [] = SyntaxError ""
+parseNegationOperator (h:t)
+    | getSType h == cSNOT = return $ (ANegationOperator h, t)
     | otherwise = SyntaxError $ getSLineNumber h
 
 parseRelationalOperator :: [Token] -> Parse (ARelationalOperator, [Token])
@@ -703,51 +710,3 @@ parseIdentifier [] = SyntaxError ""
 parseIdentifier (h:t)
     | getSType h == cSIDENTIFIER = return (AIdentifier h, t)
     | otherwise = SyntaxError $ getSLineNumber h
-
-
-cSPROGRAM = "SPROGRAM" :: String
-cSEMICOLON = "SSEMICOLON" :: String
-cSDOT = "SDOT" :: String
-cSVAR = "SVAR" :: String
-cSIDENTIFIER = "SIDENTIFIER" :: String
-cSCOLON = "SCOLON" :: String
-cSCOMMA = "SCOMMA" :: String
-cSINTEGER = "SINTEGER" :: String
-cSCHAR = "SCHAR" :: String
-cSBOOLEAN = "SBOOLEAN" :: String
-cSARRAY = "SARRAY" :: String
-cSLBRACKET = "SLBRACKET" :: String
-cSRANGE = "SRANGE" :: String
-cSRBRACKET = "SRBRACKET" :: String
-cSOF = "SOF" :: String
-cSPLUS = "SPLUS" :: String
-cSMINUS = "SMINUS" :: String
-cSPROCEDURE = "SPROCEDURE" :: String
-cSLPAREN = "SLPAREN" :: String
-cSRPAREN = "SRPAREN" :: String
-cSBEGIN = "SBEGIN" :: String
-cSEND = "SEND" :: String
-cSREADLN = "SREADLN" :: String
-cSWRITELN = "SWRITELN" :: String
-cSIF = "SIF" :: String
-cSWHILE = "SWHILE" :: String
-cSTHEN = "STHEN" :: String
-cSELSE = "SELSE" :: String
-cSDO = "SDO" :: String
-cSASSIGN = "SASSIGN" :: String
-cSEQUAL = "SEQUAL" :: String
-cSNOTEQUAL = "SNOTEQUAL" :: String
-cSLESS = "SLESS" :: String
-cSLESSEQUAL = "SLESSEQUAL" :: String
-cSGREAT = "SGREAT" :: String
-cSGREATEQUAL = "SGREATEQUAL" :: String
-cSOR = "SOR" :: String
-cSSTAR = "SSTAR" :: String
-cSDIVD = "SDIVD" :: String
-cSMOD = "SMOD" :: String
-cSAND = "SAND" :: String
-cSCONSTANT = "SCONSTANT" :: String
-cSSTRING = "SSTRING" :: String
-cSTRUE = "STRUE" :: String
-cSFALSE = "SFALSE" :: String
-cSNOT = "SNOT" :: String

@@ -6,4 +6,4 @@ import Src.Checker.ProcedureManager
 import Src.Checker.CheckMonad ( Check (..) )
 
 validateType :: (VariableTableMap, ProcedureTable) -> AST -> Check ()
-validateType = undefined
+validateType _ _ = return ()

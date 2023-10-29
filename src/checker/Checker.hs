@@ -1,4 +1,4 @@
-module Src.Checker.Checker ( run, Check (..) ) where
+module Src.Checker.Checker ( run ) where
 
 import Src.Synonym ( LineNumber )
 import Src.AST

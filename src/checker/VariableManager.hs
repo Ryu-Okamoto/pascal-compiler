@@ -1,4 +1,4 @@
-module Src.Checker.VariableManager ( VariableName, VariableTable, VariableTableMap, VariableInfo (..), constructVariableTableMap ) where
+module Src.Checker.VariableManager ( VariableName, VariableTable, VariableTableMap, VariableInfo (..), constructVariableTableMap, lookupVarInfo ) where
 
 import Data.Map.Strict as M
 
@@ -16,6 +16,15 @@ data VariableInfo = VariableInfo {
 type VariableName     = String
 type VariableTable    = Map VariableName VariableInfo
 type VariableTableMap = Map Scope VariableTable
+
+lookupVarInfo :: Scope -> VariableName -> VariableTableMap -> Maybe VariableInfo
+lookupVarInfo scope name map = do
+    localTable <- M.lookup scope map
+    if name `M.member` localTable
+    then M.lookup name localTable
+    else do
+        globalTable <- M.lookup cGLOBAL map
+        M.lookup name globalTable
 
 {-
     実装方針：

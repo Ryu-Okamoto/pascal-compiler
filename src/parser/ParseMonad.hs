@@ -1,4 +1,4 @@
-module Src.Parser.ParseMonad where
+module Src.Parser.ParseMonad ( Parse (..) ) where
 
 import Src.Synonym ( LineNumber )
 

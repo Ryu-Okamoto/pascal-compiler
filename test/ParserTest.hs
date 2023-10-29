@@ -10,8 +10,8 @@ import Src.Parser.Parser ( run )
 run :: IO()
 run = do
     runNormal
-    runSemerr
     runSynerr
+    runSemerr
 
 runNormal :: IO ()
 runNormal = do
@@ -36,46 +36,26 @@ runNormal = do
     normal19 <- readFile "./data/ts/normal19.ts"; let tsNormal19 = tsToTokens normal19;
     normal20 <- readFile "./data/ts/normal20.ts"; let tsNormal20 = tsToTokens normal20;
     hspec $ do
-        test "normal01" tsNormal01 ""
-        test "normal02" tsNormal02 ""
-        test "normal03" tsNormal03 ""
-        test "normal04" tsNormal04 ""
-        test "normal05" tsNormal05 ""
-        test "normal06" tsNormal06 ""
-        test "normal07" tsNormal07 ""
-        test "normal08" tsNormal08 ""
-        test "normal09" tsNormal09 ""
-        test "normal10" tsNormal10 ""
-        test "normal11" tsNormal11 ""
-        test "normal12" tsNormal12 ""
-        test "normal13" tsNormal13 ""
-        test "normal14" tsNormal14 ""
-        test "normal15" tsNormal15 ""
-        test "normal16" tsNormal16 ""
-        test "normal17" tsNormal17 ""
-        test "normal18" tsNormal18 ""
-        test "normal19" tsNormal19 ""
-        test "normal20" tsNormal20 ""
-
-runSemerr :: IO ()
-runSemerr = do
-    semerr01 <- readFile "./data/ts/semerr01.ts"; let tsSemerr01 = tsToTokens semerr01;
-    semerr02 <- readFile "./data/ts/semerr02.ts"; let tsSemerr02 = tsToTokens semerr02;
-    semerr03 <- readFile "./data/ts/semerr03.ts"; let tsSemerr03 = tsToTokens semerr03;
-    semerr04 <- readFile "./data/ts/semerr04.ts"; let tsSemerr04 = tsToTokens semerr04;
-    semerr05 <- readFile "./data/ts/semerr05.ts"; let tsSemerr05 = tsToTokens semerr05;
-    semerr06 <- readFile "./data/ts/semerr06.ts"; let tsSemerr06 = tsToTokens semerr06;
-    semerr07 <- readFile "./data/ts/semerr07.ts"; let tsSemerr07 = tsToTokens semerr07;
-    semerr08 <- readFile "./data/ts/semerr08.ts"; let tsSemerr08 = tsToTokens semerr08;
-    hspec $ do
-        test "synerr01" tsSemerr01 ""
-        test "synerr02" tsSemerr02 ""
-        test "synerr03" tsSemerr03 ""
-        test "synerr04" tsSemerr04 ""
-        test "synerr05" tsSemerr05 ""
-        test "synerr06" tsSemerr06 ""
-        test "synerr07" tsSemerr07 ""
-        test "synerr08" tsSemerr08 ""
+        test "normal01" tsNormal01 "OK"
+        test "normal02" tsNormal02 "OK"
+        test "normal03" tsNormal03 "OK"
+        test "normal04" tsNormal04 "OK"
+        test "normal05" tsNormal05 "OK"
+        test "normal06" tsNormal06 "OK"
+        test "normal07" tsNormal07 "OK"
+        test "normal08" tsNormal08 "OK"
+        test "normal09" tsNormal09 "OK"
+        test "normal10" tsNormal10 "OK"
+        test "normal11" tsNormal11 "OK"
+        test "normal12" tsNormal12 "OK"
+        test "normal13" tsNormal13 "OK"
+        test "normal14" tsNormal14 "OK"
+        test "normal15" tsNormal15 "OK"
+        test "normal16" tsNormal16 "OK"
+        test "normal17" tsNormal17 "OK"
+        test "normal18" tsNormal18 "OK"
+        test "normal19" tsNormal19 "OK"
+        test "normal20" tsNormal20 "OK"
 
 runSynerr :: IO ()
 runSynerr = do
@@ -97,10 +77,30 @@ runSynerr = do
         test "synerr07" tsSynerr07 "30"
         test "synerr08" tsSynerr08 "31"
 
+runSemerr :: IO ()
+runSemerr = do
+    semerr01 <- readFile "./data/ts/semerr01.ts"; let tsSemerr01 = tsToTokens semerr01;
+    semerr02 <- readFile "./data/ts/semerr02.ts"; let tsSemerr02 = tsToTokens semerr02;
+    semerr03 <- readFile "./data/ts/semerr03.ts"; let tsSemerr03 = tsToTokens semerr03;
+    semerr04 <- readFile "./data/ts/semerr04.ts"; let tsSemerr04 = tsToTokens semerr04;
+    semerr05 <- readFile "./data/ts/semerr05.ts"; let tsSemerr05 = tsToTokens semerr05;
+    semerr06 <- readFile "./data/ts/semerr06.ts"; let tsSemerr06 = tsToTokens semerr06;
+    semerr07 <- readFile "./data/ts/semerr07.ts"; let tsSemerr07 = tsToTokens semerr07;
+    semerr08 <- readFile "./data/ts/semerr08.ts"; let tsSemerr08 = tsToTokens semerr08;
+    hspec $ do
+        test "semerr01" tsSemerr01 "OK"
+        test "semerr02" tsSemerr02 "OK"
+        test "semerr03" tsSemerr03 "OK"
+        test "semerr04" tsSemerr04 "OK"
+        test "semerr05" tsSemerr05 "OK"
+        test "semerr06" tsSemerr06 "OK"
+        test "semerr07" tsSemerr07 "OK"
+        test "semerr08" tsSemerr08 "OK"
+
 test :: String -> [Token] -> String -> Spec
 test description tokens expected = describe description $ it "standard" $ result `shouldBe` expected
     where
         result = let ast = Src.Parser.Parser.run tokens in
                 case ast of
                     (SyntaxError lineNumber) -> lineNumber
-                    _ -> ""
+                    _ -> "OK"
