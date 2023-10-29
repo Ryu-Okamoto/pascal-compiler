@@ -1,4 +1,4 @@
-module Src.Checker.VariableManager ( VariableName, VariableTable, VariableTableMap, VariableInfo (..), constructVariableTableMap, lookupVarInfo ) where
+module Src.Checker.VariableManager ( VariableName, LocalTable, VariableTable, VariableInfo (..), constructVariableTable, lookupVarInfo ) where
 
 import Data.Map.Strict as M
 
@@ -13,32 +13,32 @@ data VariableInfo = VariableInfo {
     getVarDefinedLine :: LineNumber
 } deriving ( Show )
 
-type VariableName     = String
-type VariableTable    = Map VariableName VariableInfo
-type VariableTableMap = Map Scope VariableTable
+type VariableName  = String
+type LocalTable    = Map VariableName VariableInfo
+type VariableTable = Map Scope LocalTable
 
-lookupVarInfo :: Scope -> VariableName -> VariableTableMap -> Maybe VariableInfo
-lookupVarInfo scope name map = do
-    localTable <- M.lookup scope map
+lookupVarInfo :: Scope -> VariableName -> VariableTable -> Maybe VariableInfo
+lookupVarInfo scope name table = do
+    localTable <- M.lookup scope table
     if name `M.member` localTable
     then M.lookup name localTable
     else do
-        globalTable <- M.lookup cGLOBAL map
+        globalTable <- M.lookup cGLOBAL table
         M.lookup name globalTable
 
 {-
     実装方針：
      - AST 要素のうち必要なとこだけを visit
        - 重複宣言がある場合はその行番号とともに SemanticError
-       - そうでない場合は VariableTableMap を返す
-        - VariableTableMap は (Scope, VariableTable) の Map
-         - VariableTable は (VariableName, VariableInfo) の Map
+       - そうでない場合は VariableTable を返す
+        - VariableTable は (Scope, LocalTable) の Map
+         - LocalTable は (VariableName, VariableInfo) の Map
 -}
 
-constructVariableTableMap :: AST -> Check VariableTableMap
-constructVariableTableMap = visitProgram
+constructVariableTable :: AST -> Check VariableTable
+constructVariableTable = visitProgram
 
-visitProgram :: AProgram -> Check VariableTableMap
+visitProgram :: AProgram -> Check VariableTable
 visitProgram (
         AProgram
             _
@@ -46,7 +46,7 @@ visitProgram (
             _
     ) = visitBlock block
 
-visitBlock :: ABlock -> Check VariableTableMap
+visitBlock :: ABlock -> Check VariableTable
 visitBlock (
         ABlock
             variableDeclaration
@@ -56,7 +56,7 @@ visitBlock (
         localTableMap <- visitSubprogramDeclarations subprogramDeclarations
         return $ M.insert cGLOBAL globalTable localTableMap
 
-visitVariableDeclaration :: AVariableDeclaration -> Check VariableTable
+visitVariableDeclaration :: AVariableDeclaration -> Check LocalTable
 visitVariableDeclaration (
         AVariableDeclaration
             Nothing
@@ -66,7 +66,7 @@ visitVariableDeclaration (
             (Just variableDeclarationSequence)
     ) = visitVariableDeclarationSequence variableDeclarationSequence
 
-visitVariableDeclarationSequence :: AVariableDeclarationSequence -> Check VariableTable
+visitVariableDeclarationSequence :: AVariableDeclarationSequence -> Check LocalTable
 visitVariableDeclarationSequence (
         AVariableDeclarationSequence
             variableDeclarationSequence'
@@ -77,7 +77,7 @@ visitVariableDeclarationSequence (
         in
             createVariableTable reversed
     where
-        createVariableTable :: [AVariableDeclarationSequence'] -> Check VariableTable
+        createVariableTable :: [AVariableDeclarationSequence'] -> Check LocalTable
         createVariableTable [] = return M.empty
         createVariableTable (h:t) = do
             newTable <- visitVariableDeclarationSequence' h
@@ -90,7 +90,7 @@ visitVariableDeclarationSequence (
                 let duplicating = M.elemAt 0 duplicatingTable
                 SemanticError $ getVarDefinedLine $ snd duplicating
 
-visitVariableDeclarationSequence' :: AVariableDeclarationSequence' -> Check VariableTable
+visitVariableDeclarationSequence' :: AVariableDeclarationSequence' -> Check LocalTable
 visitVariableDeclarationSequence' (
         AVariableDeclarationSequence'
             variableNameSequence
@@ -166,7 +166,7 @@ visitArrayType (
     where
         dtype = visitStandardType standardType
 
-visitSubprogramDeclarations :: ASubprogramDeclarations -> Check VariableTableMap
+visitSubprogramDeclarations :: ASubprogramDeclarations -> Check VariableTable
 visitSubprogramDeclarations (
         ASubprogramDeclarations
             subprogramDeclarationList
@@ -176,14 +176,14 @@ visitSubprogramDeclarations (
         in
             createVariableTableMap reversed
     where
-        createVariableTableMap :: [ASubprogramDeclaration] -> Check VariableTableMap
+        createVariableTableMap :: [ASubprogramDeclaration] -> Check VariableTable
         createVariableTableMap [] = return M.empty
         createVariableTableMap (h:t) = do
             newMap <- visitSubprogramDeclaration h
             createdMap <- createVariableTableMap t
             return $ newMap `M.union` createdMap
 
-visitSubprogramDeclaration :: ASubprogramDeclaration -> Check VariableTableMap
+visitSubprogramDeclaration :: ASubprogramDeclaration -> Check VariableTable
 visitSubprogramDeclaration (
         ASubprogramDeclaration
             subprogramHead
@@ -200,7 +200,7 @@ visitSubprogramDeclaration (
             let duplicating = M.elemAt 0 duplicatingTable
             SemanticError $ getVarDefinedLine $ snd duplicating
 
-visitSubprogramHead :: ASubprogramHead -> Check (Scope, VariableTable)
+visitSubprogramHead :: ASubprogramHead -> Check (Scope, LocalTable)
 visitSubprogramHead (
         ASubprogramHead
             procedureName
@@ -216,7 +216,7 @@ visitProcedureName (
             identifier
     ) = fst $ visitIdentifier identifier
 
-visitParameter :: AParameter -> Check VariableTable
+visitParameter :: AParameter -> Check LocalTable
 visitParameter (
         AParameter
             Nothing
@@ -226,7 +226,7 @@ visitParameter (
             (Just parameterSequence)
     ) = visitParameterSequence parameterSequence
 
-visitParameterSequence :: AParameterSequence -> Check VariableTable
+visitParameterSequence :: AParameterSequence -> Check LocalTable
 visitParameterSequence (
         AParameterSequence
             parameterSequence'
@@ -237,7 +237,7 @@ visitParameterSequence (
         in
             createParameterTable reversed
     where
-        createParameterTable :: [AParameterSequence'] -> Check VariableTable
+        createParameterTable :: [AParameterSequence'] -> Check LocalTable
         createParameterTable [] = return M.empty
         createParameterTable (h:t) = do
             newTable <- visitParameterSequence' h
@@ -250,7 +250,7 @@ visitParameterSequence (
                 let duplicating = M.elemAt 0 duplicatingTable
                 SemanticError $ getVarDefinedLine $ snd duplicating
 
-visitParameterSequence' :: AParameterSequence' -> Check VariableTable
+visitParameterSequence' :: AParameterSequence' -> Check LocalTable
 visitParameterSequence' (
         AParameterSequence'
             parameterNameSequence

@@ -386,16 +386,22 @@ parseStatement (h:t)
 
 parseIfStatement :: [Token] -> Parse (AIfStatement, [Token])
 parseIfStatement [] = SyntaxError ""
-parseIfStatement (h:t)
-    | getSType h == cSIF = do
-        (expression, rest1) <- parseExpression t
-        if null rest1 || getSType (head rest1) /= cSTHEN
-        then 
-            SyntaxError $ getSLineNumber h
-        else do
-            (compoundStatement, rest2) <- parseCompoundStatement (tail rest1)
-            (elseStatement, rest3) <- parseElseStatement rest2
-            return (AIfStatement expression compoundStatement elseStatement, rest3)
+parseIfStatement (h:t) = do
+    (keyword, rest1) <- parseIfKeyword (h:t)
+    (expression, rest2) <- parseExpression rest1
+    if null rest2 || getSType (head rest2) /= cSTHEN
+    then 
+        SyntaxError $ getSLineNumber h
+    else do
+        (compoundStatement, rest3) <- parseCompoundStatement (tail rest2)
+        (elseStatement, rest4) <- parseElseStatement rest3
+        return (AIfStatement keyword expression compoundStatement elseStatement, rest4)
+
+parseIfKeyword :: [Token] -> Parse (AIfKeyWord, [Token])
+parseIfKeyword [] = SyntaxError ""
+parseIfKeyword (h:t)
+    | getSType h == cSIF = return (AIfKeyword h, t)
+    | otherwise = SyntaxError $ getSLineNumber h
 
 parseElseStatement :: [Token] -> Parse (AElseStatement, [Token])
 parseElseStatement [] = SyntaxError ""
@@ -407,15 +413,20 @@ parseElseStatement (h:t)
 
 parseWhileStatement :: [Token] -> Parse (AWhileStatement, [Token])
 parseWhileStatement [] = SyntaxError ""
-parseWhileStatement (h:t)
-    | getSType h == cSWHILE = do
-        (expression, rest1) <- parseExpression t
-        if null rest1 || getSType (head rest1) /= cSDO
-        then 
-            SyntaxError $ getSLineNumber h
-        else do
-            (compoundStatement, rest2) <- parseCompoundStatement (tail rest1)
-            return (AWhileStatement expression compoundStatement, rest2)
+parseWhileStatement (h:t) = do
+    (keyword, rest1) <- parseWhileKeyword (h:t)
+    (expression, rest2) <- parseExpression rest1
+    if null rest2 || getSType (head rest2) /= cSDO
+    then 
+        SyntaxError $ getSLineNumber h
+    else do
+        (compoundStatement, rest3) <- parseCompoundStatement (tail rest2)
+        return (AWhileStatement keyword expression compoundStatement, rest3)
+
+parseWhileKeyword :: [Token] -> Parse (AWhileKeyword, [Token])
+parseWhileKeyword [] = SyntaxError ""
+parseWhileKeyword (h:t)
+    | getSType h == cSWHILE = return (AWhileKeyword h, t)
     | otherwise = SyntaxError $ getSLineNumber h
 
 parseBasicStatemet :: [Token] -> Parse (ABasicStatemet, [Token])
@@ -681,8 +692,14 @@ parseConstant (h:t)
         (unsignedInteger, rest) <- parseUnsignedInteger (h:t)
         return (AIntegerLiteral unsignedInteger, rest)
     | getSType h == cSSTRING = do
-        (string, rest) <- parseString (h:t)
-        return (AStringLiteral string, rest)
+        let literal = getSSymbol h
+        if length literal > 3 -- 2文字以上ならば
+        then do
+            (string, rest) <- parseString (h:t)
+            return (AStringLiteral string, rest)
+        else do
+            (char_, rest) <- parseCharacter (h:t)
+            return (ACharacterLiteral char_, rest)
     | getSType h `elem` [cSTRUE, cSFALSE] = do
         (boolean, rest) <- parseBoolean (h:t)
         return (ABooleanLiteral boolean, rest)
@@ -703,6 +720,12 @@ parseBoolean :: [Token] -> Parse (ABoolean, [Token])
 parseBoolean [] = SyntaxError ""
 parseBoolean (h:t)
     | getSType h `elem` [cSTRUE, cSFALSE] = return (ABoolean h, t)
+    | otherwise = SyntaxError $ getSLineNumber h
+
+parseCharacter :: [Token] -> Parse (ACharacter, [Token])
+parseCharacter [] = SyntaxError ""
+parseCharacter (h:t)
+    | getSType h == cSSTRING = return (ACharacter h, t)
     | otherwise = SyntaxError $ getSLineNumber h
 
 parseIdentifier :: [Token] -> Parse (AIdentifier, [Token])

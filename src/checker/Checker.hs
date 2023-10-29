@@ -16,6 +16,6 @@ import Src.Checker.TypeValidator
 
 run :: AST -> Check ()
 run ast = do
-    variableTableMap <- constructVariableTableMap ast
+    variableTableMap <- constructVariableTable ast
     procedureTable <- constructProcedureTable ast
-    validateType (variableTableMap, procedureTable) ast
+    validateType ast (variableTableMap, procedureTable) 
