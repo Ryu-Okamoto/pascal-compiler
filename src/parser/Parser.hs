@@ -1,25 +1,39 @@
-module Src.Parser ( run, Parse (..) ) where
+module Src.Parser.Parser ( run ) where
 
 import Src.Synonym ( LineNumber )
-import Src.Token ( Token (..) )
+import Src.Token
 import Src.AST
+import Src.Parser.ParseMonad ( Parse (..) )
 
-data Parse a = Parse a | SyntaxError LineNumber
-instance Functor Parse where
-    fmap :: (a -> b) -> Parse a -> Parse b
-    fmap f (Parse x) = Parse (f x)
-    fmap _ (SyntaxError lineNumber) = SyntaxError lineNumber
-instance Applicative Parse where
-    pure :: a -> Parse a
-    pure = Parse
-    (<*>) :: Parse (a -> b) -> Parse a -> Parse b
-    (<*>) (Parse f) (Parse x) = Parse (f x)
-    (<*>) _ (SyntaxError lineNumber) = SyntaxError lineNumber
-    (<*>) (SyntaxError lineNumber) _ = SyntaxError lineNumber
-instance Monad Parse where
-    (>>=) :: Parse a -> (a -> Parse b) -> Parse b
-    (>>=) (Parse x) f = f x
-    (>>=) (SyntaxError lineNumber) _ = SyntaxError lineNumber
+{-
+    実装方針：
+     - Token を一つずつ読んでLL(1)解析
+      - 各 AST 要素に対し parse
+       - 文法と異なるとこがあればその行番号とともに SyntaxError
+       - そうでない場合は (AST 部分木, 残りの Token リスト) を返す
+    
+    例）以下、EBNF の式に対する parse 関数
+
+    (1)「<A> ::= "fuga1" <B1> "fuga2" <B2> "fuga3"」のとき
+    parseA tokens = 
+        if (head tokens /= "fuga1") then SyntaxError ("fuga1" の行番号)
+        else do
+            (b1, rest1) <- parseB1 (tail tokens)
+            if (head rest1 /= "fuga2") then SyntaxError ("fuga2" の行番号)
+            else do
+                (b2, rest2) <- parseB2 (tail rest1)
+                if (head rest2 /= "fuga3") then SyntaxError ("fuga3" の行番号)
+                else
+                    return (AConstructer B1 B2, rest2)
+    
+    (2)「<C> ::= <D> | <E>」 のとき
+    parseC tokens
+        | head tokens `elem` First(<D>) = parseD tokens
+        | head tokens `elem` First(<E>) = parseE tokens
+        | otherwise = SyntaxError (head tokens の行番号)
+        where
+            First(<X>) は <X> の First 集合、すなわち、<X> の要素で初めに現れうる終端記号の集合を表す。
+-}
 
 run :: [Token] -> Parse AST
 run ts = do
@@ -372,16 +386,22 @@ parseStatement (h:t)
 
 parseIfStatement :: [Token] -> Parse (AIfStatement, [Token])
 parseIfStatement [] = SyntaxError ""
-parseIfStatement (h:t)
-    | getSType h == cSIF = do
-        (expression, rest1) <- parseExpression t
-        if null rest1 || getSType (head rest1) /= cSTHEN
-        then 
-            SyntaxError $ getSLineNumber h
-        else do
-            (compoundStatement, rest2) <- parseCompoundStatement (tail rest1)
-            (elseStatement, rest3) <- parseElseStatement rest2
-            return (AIfStatement expression compoundStatement elseStatement, rest3)
+parseIfStatement (h:t) = do
+    (keyword, rest1) <- parseIfKeyword (h:t)
+    (expression, rest2) <- parseExpression rest1
+    if null rest2 || getSType (head rest2) /= cSTHEN
+    then 
+        SyntaxError $ getSLineNumber h
+    else do
+        (compoundStatement, rest3) <- parseCompoundStatement (tail rest2)
+        (elseStatement, rest4) <- parseElseStatement rest3
+        return (AIfStatement keyword expression compoundStatement elseStatement, rest4)
+
+parseIfKeyword :: [Token] -> Parse (AIfKeyWord, [Token])
+parseIfKeyword [] = SyntaxError ""
+parseIfKeyword (h:t)
+    | getSType h == cSIF = return (AIfKeyword h, t)
+    | otherwise = SyntaxError $ getSLineNumber h
 
 parseElseStatement :: [Token] -> Parse (AElseStatement, [Token])
 parseElseStatement [] = SyntaxError ""
@@ -393,15 +413,20 @@ parseElseStatement (h:t)
 
 parseWhileStatement :: [Token] -> Parse (AWhileStatement, [Token])
 parseWhileStatement [] = SyntaxError ""
-parseWhileStatement (h:t)
-    | getSType h == cSWHILE = do
-        (expression, rest1) <- parseExpression t
-        if null rest1 || getSType (head rest1) /= cSDO
-        then 
-            SyntaxError $ getSLineNumber h
-        else do
-            (compoundStatement, rest2) <- parseCompoundStatement (tail rest1)
-            return (AWhileStatement expression compoundStatement, rest2)
+parseWhileStatement (h:t) = do
+    (keyword, rest1) <- parseWhileKeyword (h:t)
+    (expression, rest2) <- parseExpression rest1
+    if null rest2 || getSType (head rest2) /= cSDO
+    then 
+        SyntaxError $ getSLineNumber h
+    else do
+        (compoundStatement, rest3) <- parseCompoundStatement (tail rest2)
+        return (AWhileStatement keyword expression compoundStatement, rest3)
+
+parseWhileKeyword :: [Token] -> Parse (AWhileKeyword, [Token])
+parseWhileKeyword [] = SyntaxError ""
+parseWhileKeyword (h:t)
+    | getSType h == cSWHILE = return (AWhileKeyword h, t)
     | otherwise = SyntaxError $ getSLineNumber h
 
 parseBasicStatemet :: [Token] -> Parse (ABasicStatemet, [Token])
@@ -428,7 +453,7 @@ parseAssignmentStatement [] = SyntaxError ""
 parseAssignmentStatement (h:t) = do
     (leftSide, rest1) <- parseLeftSide (h:t)
     if null rest1 || getSType (head rest1) /= cSASSIGN
-    then
+    then 
         SyntaxError $ getSLineNumber h
     else do
         (expression, rest2) <- parseExpression (tail rest1)
@@ -589,8 +614,15 @@ parseFactor (h:t)
         then SyntaxError $ getSLineNumber h
         else return (ARecursion expression, tail rest)
     | getSType h == cSNOT = do
-        (factor, rest) <- parseFactor t
-        return (ANegation factor, rest)
+        (negation, rest1) <- parseNegationOperator (h:t)
+        (factor, rest2) <- parseFactor rest1
+        return (ANegation negation factor, rest2)
+    | otherwise = SyntaxError $ getSLineNumber h
+
+parseNegationOperator :: [Token] -> Parse (ANegationOperator, [Token])
+parseNegationOperator [] = SyntaxError ""
+parseNegationOperator (h:t)
+    | getSType h == cSNOT = return $ (ANegationOperator h, t)
     | otherwise = SyntaxError $ getSLineNumber h
 
 parseRelationalOperator :: [Token] -> Parse (ARelationalOperator, [Token])
@@ -660,8 +692,14 @@ parseConstant (h:t)
         (unsignedInteger, rest) <- parseUnsignedInteger (h:t)
         return (AIntegerLiteral unsignedInteger, rest)
     | getSType h == cSSTRING = do
-        (string, rest) <- parseString (h:t)
-        return (AStringLiteral string, rest)
+        let literal = getSSymbol h
+        if length literal > 3 -- 2文字以上ならば
+        then do
+            (string, rest) <- parseString (h:t)
+            return (AStringLiteral string, rest)
+        else do
+            (char_, rest) <- parseCharacter (h:t)
+            return (ACharacterLiteral char_, rest)
     | getSType h `elem` [cSTRUE, cSFALSE] = do
         (boolean, rest) <- parseBoolean (h:t)
         return (ABooleanLiteral boolean, rest)
@@ -684,56 +722,14 @@ parseBoolean (h:t)
     | getSType h `elem` [cSTRUE, cSFALSE] = return (ABoolean h, t)
     | otherwise = SyntaxError $ getSLineNumber h
 
+parseCharacter :: [Token] -> Parse (ACharacter, [Token])
+parseCharacter [] = SyntaxError ""
+parseCharacter (h:t)
+    | getSType h == cSSTRING = return (ACharacter h, t)
+    | otherwise = SyntaxError $ getSLineNumber h
+
 parseIdentifier :: [Token] -> Parse (AIdentifier, [Token])
 parseIdentifier [] = SyntaxError ""
 parseIdentifier (h:t)
     | getSType h == cSIDENTIFIER = return (AIdentifier h, t)
     | otherwise = SyntaxError $ getSLineNumber h
-
-
-cSPROGRAM = "SPROGRAM" :: String
-cSEMICOLON = "SSEMICOLON" :: String
-cSDOT = "SDOT" :: String
-cSVAR = "SVAR" :: String
-cSIDENTIFIER = "SIDENTIFIER" :: String
-cSCOLON = "SCOLON" :: String
-cSCOMMA = "SCOMMA" :: String
-cSINTEGER = "SINTEGER" :: String
-cSCHAR = "SCHAR" :: String
-cSBOOLEAN = "SBOOLEAN" :: String
-cSARRAY = "SARRAY" :: String
-cSLBRACKET = "SLBRACKET" :: String
-cSRANGE = "SRANGE" :: String
-cSRBRACKET = "SRBRACKET" :: String
-cSOF = "SOF" :: String
-cSPLUS = "SPLUS" :: String
-cSMINUS = "SMINUS" :: String
-cSPROCEDURE = "SPROCEDURE" :: String
-cSLPAREN = "SLPAREN" :: String
-cSRPAREN = "SRPAREN" :: String
-cSBEGIN = "SBEGIN" :: String
-cSEND = "SEND" :: String
-cSREADLN = "SREADLN" :: String
-cSWRITELN = "SWRITELN" :: String
-cSIF = "SIF" :: String
-cSWHILE = "SWHILE" :: String
-cSTHEN = "STHEN" :: String
-cSELSE = "SELSE" :: String
-cSDO = "SDO" :: String
-cSASSIGN = "SASSIGN" :: String
-cSEQUAL = "SEQUAL" :: String
-cSNOTEQUAL = "SNOTEQUAL" :: String
-cSLESS = "SLESS" :: String
-cSLESSEQUAL = "SLESSEQUAL" :: String
-cSGREAT = "SGREAT" :: String
-cSGREATEQUAL = "SGREATEQUAL" :: String
-cSOR = "SOR" :: String
-cSSTAR = "SSTAR" :: String
-cSDIVD = "SDIVD" :: String
-cSMOD = "SMOD" :: String
-cSAND = "SAND" :: String
-cSCONSTANT = "SCONSTANT" :: String
-cSSTRING = "SSTRING" :: String
-cSTRUE = "STRUE" :: String
-cSFALSE = "SFALSE" :: String
-cSNOT = "SNOT" :: String

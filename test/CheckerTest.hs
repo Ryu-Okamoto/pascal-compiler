@@ -1,4 +1,4 @@
-module Test.ParserTest where
+module Test.CheckerTest where
 
 import Test.Hspec ( Spec, describe, it, shouldBe, hspec )
 
@@ -6,6 +6,8 @@ import Src.Token ( Token, tsToTokens )
 import Src.AST ( AST )
 import Src.Parser.ParseMonad ( Parse (..) )
 import Src.Parser.Parser ( run )
+import Src.Checker.CheckMonad ( Check (..) )
+import Src.Checker.Checker ( run )
 
 run :: IO()
 run = do
@@ -88,19 +90,22 @@ runSemerr = do
     semerr07 <- readFile "./data/ts/semerr07.ts"; let tsSemerr07 = tsToTokens semerr07;
     semerr08 <- readFile "./data/ts/semerr08.ts"; let tsSemerr08 = tsToTokens semerr08;
     hspec $ do
-        test "semerr01" tsSemerr01 "OK"
-        test "semerr02" tsSemerr02 "OK"
-        test "semerr03" tsSemerr03 "OK"
-        test "semerr04" tsSemerr04 "OK"
-        test "semerr05" tsSemerr05 "OK"
-        test "semerr06" tsSemerr06 "OK"
-        test "semerr07" tsSemerr07 "OK"
-        test "semerr08" tsSemerr08 "OK"
+        test "semerr01" tsSemerr01 "6"
+        test "semerr02" tsSemerr02 "23"
+        test "semerr03" tsSemerr03 "29"
+        test "semerr04" tsSemerr04 "29"
+        test "semerr05" tsSemerr05 "30"
+        test "semerr06" tsSemerr06 "31"
+        test "semerr07" tsSemerr07 "31"
+        test "semerr08" tsSemerr08 "34"
 
 test :: String -> [Token] -> String -> Spec
 test description tokens expected = describe description $ it "standard" $ result `shouldBe` expected
     where
-        result = let ast = Src.Parser.Parser.run tokens in
-                case ast of
-                    (SyntaxError lineNumber) -> lineNumber
-                    _ -> "OK"
+        result = let res1 = Src.Parser.Parser.run tokens in 
+                    case res1 of
+                        (SyntaxError lineNumber) -> lineNumber
+                        (Parse ast) -> let res2 = Src.Checker.Checker.run ast in
+                                            case res2 of
+                                                (SemanticError lineNumber) -> lineNumber
+                                                _ -> "OK"

@@ -1,2 +1,4 @@
 .ghc.*
 .DS_Store
+
+SmallTest.hs

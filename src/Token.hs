@@ -1,13 +1,14 @@
 module Src.Token where
 
 import Data.Char ( isNumber, isAlpha )
+import Data.List.Split ( splitOn )
 
 import Src.Synonym ( LineNumber )
 
 data Token = Token {
-    getSSymbol :: String, 
-    getSType :: String,
-    getSID :: String,
+    getSSymbol     :: String, 
+    getSType       :: String,
+    getSID         :: String,
     getSLineNumber :: LineNumber
 } deriving ( Show, Eq )
 
@@ -61,3 +62,53 @@ createToken token lineNumber
     | token == ","         = Token ","         "SCOMMA"      "41" lineNumber
     | token == "."         = Token "."         "SDOT"        "42" lineNumber
     | otherwise            = Token token       "SIDENTIFIER" "43" lineNumber 
+
+tsToTokens :: String -> [Token]
+tsToTokens ts = map ((\(s:t:i:l:_) -> Token s t i l) . splitOn "\t") (lines ts)
+
+cSPROGRAM    = "SPROGRAM" :: String
+cSEMICOLON   = "SSEMICOLON" :: String
+cSDOT        = "SDOT" :: String
+cSVAR        = "SVAR" :: String
+cSIDENTIFIER = "SIDENTIFIER" :: String
+cSCOLON      = "SCOLON" :: String
+cSCOMMA      = "SCOMMA" :: String
+cSINTEGER    = "SINTEGER" :: String
+cSCHAR       = "SCHAR" :: String
+cSBOOLEAN    = "SBOOLEAN" :: String
+cSARRAY      = "SARRAY" :: String
+cSLBRACKET   = "SLBRACKET" :: String
+cSRANGE      = "SRANGE" :: String
+cSRBRACKET   = "SRBRACKET" :: String
+cSOF         = "SOF" :: String
+cSPLUS       = "SPLUS" :: String
+cSMINUS      = "SMINUS" :: String
+cSPROCEDURE  = "SPROCEDURE" :: String
+cSLPAREN     = "SLPAREN" :: String
+cSRPAREN     = "SRPAREN" :: String
+cSBEGIN      = "SBEGIN" :: String
+cSEND        = "SEND" :: String
+cSREADLN     = "SREADLN" :: String
+cSWRITELN    = "SWRITELN" :: String
+cSIF         = "SIF" :: String
+cSWHILE      = "SWHILE" :: String
+cSTHEN       = "STHEN" :: String
+cSELSE       = "SELSE" :: String
+cSDO         = "SDO" :: String
+cSASSIGN     = "SASSIGN" :: String
+cSEQUAL      = "SEQUAL" :: String
+cSNOTEQUAL   = "SNOTEQUAL" :: String
+cSLESS       = "SLESS" :: String
+cSLESSEQUAL  = "SLESSEQUAL" :: String
+cSGREAT      = "SGREAT" :: String
+cSGREATEQUAL = "SGREATEQUAL" :: String
+cSOR         = "SOR" :: String
+cSSTAR       = "SSTAR" :: String
+cSDIVD       = "SDIVD" :: String
+cSMOD        = "SMOD" :: String
+cSAND        = "SAND" :: String
+cSCONSTANT   = "SCONSTANT" :: String
+cSSTRING     = "SSTRING" :: String
+cSTRUE       = "STRUE" :: String
+cSFALSE      = "SFALSE" :: String
+cSNOT        = "SNOT" :: String

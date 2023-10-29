@@ -2,10 +2,8 @@ module Test.LexerTest where
 
 import Test.Hspec ( Spec, describe, it, shouldBe, hspec )
 
-import Data.List.Split ( splitOn )
-
-import Src.Token ( Token (..) )
-import Src.Lexer ( run )
+import Src.Token ( Token (..), tsToTokens )
+import Src.Lexer.Lexer ( run )
 
 run :: IO ()
 run = do
@@ -52,7 +50,4 @@ run = do
         test "normal20" pas20 ts20
     where
         test :: String -> String -> String -> Spec
-        test description source ts = describe description $ it "standard" $ Src.Lexer.run source `shouldBe` tsToTokens ts
-                
-tsToTokens :: String -> [Token]
-tsToTokens ts = map ((\(s:t:i:l:_) -> Token s t i l) . splitOn "\t") (lines ts)
+        test description source ts = describe description $ it "standard" $ Src.Lexer.Lexer.run source `shouldBe` tsToTokens ts
