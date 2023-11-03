@@ -19,6 +19,15 @@ type Operator = String
 validateType :: AST -> (VariableTable, ProcedureTable) -> Check ()
 validateType ast = runReaderT (visitProgram ast)
 
+{-
+    実装方針；
+     - AST 要素のうち必要なとこだけを visit
+      - 型を考える要素では、visit 関数の返り値としてその型を返す
+       - 型検査が必要なところ、例えば代入分などでは、子要素に visit してその返り値を持って検査
+     - Reader モナドを使って作っておいた VariableTable、ProcedureTable を連れ回す
+      - 参照の際に lookupし、Nothing なら SemanticError
+-}
+
 visitProgram :: AProgram -> ReaderT Tables Check ()
 visitProgram (
         AProgram
